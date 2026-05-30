@@ -24,6 +24,19 @@ mapfile -t FILES < <(
   } | grep -v '/\.git/' | sort -u
 )
 
+# ------- PASS-EMPTY short-circuit -------
+# If no candidate files exist, emit PASS-EMPTY so consumers don't mistake
+# "nothing scanned" for "verified routing".
+CANDIDATE_COUNT=0
+for _f in "${FILES[@]}"; do
+  [ -n "$_f" ] && CANDIDATE_COUNT=$((CANDIDATE_COUNT + 1))
+done
+
+if [ "$CANDIDATE_COUNT" -eq 0 ]; then
+  echo "PASS-EMPTY: 0 candidate files scanned (no Bicep/manifests/.env.example/docker-compose in repo) — Anthropic config likely lives in deployed CA env vars; verify deployed state separately. See runbook: $RUNBOOK_URL"
+  exit 0
+fi
+
 OFFENDERS=()
 
 for f in "${FILES[@]}"; do

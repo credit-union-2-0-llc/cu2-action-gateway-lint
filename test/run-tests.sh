@@ -25,8 +25,29 @@ run_case() {
   fi
 }
 
+run_case_stdout() {
+  local name="$1"
+  local dir="$2"
+  local expected="$3"
+  local needle="$4"
+
+  pushd "$dir" >/dev/null
+  bash "$SCAN" >/tmp/scan-out.txt 2>&1
+  local rc=$?
+  popd >/dev/null
+
+  if [ "$rc" -eq "$expected" ] && grep -q "$needle" /tmp/scan-out.txt; then
+    echo "PASS: $name (exit=$rc, stdout matched '$needle')"
+  else
+    echo "FAIL: $name expected exit=$expected got=$rc needle='$needle'"
+    cat /tmp/scan-out.txt
+    FAIL=1
+  fi
+}
+
 run_case "passing fixture" "$ROOT/test/fixtures/passing" 0
 run_case "failing fixture" "$ROOT/test/fixtures/failing" 1
+run_case_stdout "empty fixture" "$ROOT/test/fixtures/empty" 0 "PASS-EMPTY"
 
 # Exemption test: drop a valid exempt file into failing fixture and re-run
 EXEMPT_DIR="$(mktemp -d)"

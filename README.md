@@ -51,6 +51,18 @@ Approved 2026-05 by @kdrake and @hugh-smallwood for the duration of the bring-up
 
 The lint will then emit a `WARNING` instead of failing. Exemptions should be reviewed at the next governance gate.
 
+## Result types
+
+The lint emits one of three result states. Consumers (CI dashboards, ops audits) should treat these distinctly:
+
+| Result | Exit | Meaning |
+|--------|------|---------|
+| `PASS` | 0 | Candidate files were found and every `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` reference has a co-located `ANTHROPIC_BASE_URL` pointing at the gateway. Routing is verified in source. |
+| `PASS-EMPTY` | 0 | **Zero candidate files were scanned** (no Bicep, no K8s manifests, no `.env.example`, no `docker-compose*`). The lint cannot confirm routing from source — Anthropic config likely lives in deployed Container App env vars. **Verify deployed state separately** (e.g. `az containerapp show` against the gateway-bound CA). Do not treat `PASS-EMPTY` as equivalent to `PASS`. |
+| `FAIL` | 1 | At least one provider-key reference lacks a co-located gateway base URL, and no valid `.gateway-exempt` is present. |
+
+`PASS-EMPTY` was added in v1.0.1 to prevent false confidence for repos whose deploy config is generated/managed outside the source tree.
+
 ## Runbook
 
 See: https://github.com/credit-union-2-0-llc/ops-platform/wiki/litellm-gateway-runbook

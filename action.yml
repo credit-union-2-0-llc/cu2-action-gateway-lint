@@ -1,0 +1,26 @@
+name: 'CU2 Gateway Lint'
+description: 'Fail if repo references ANTHROPIC_API_KEY without ANTHROPIC_BASE_URL pointing at the LiteLLM gateway'
+author: 'credit-union-2-0-llc'
+branding:
+  icon: 'shield'
+  color: 'orange'
+
+inputs:
+  gateway-hostname-pattern:
+    description: 'Comma-separated substrings that must appear in ANTHROPIC_BASE_URL value to be considered a gateway URL'
+    required: false
+    default: 'litellm,gateway'
+  exempt-file-path:
+    description: 'Path to exemption file at repo root. Must contain >=3 non-empty lines and at least one @username mention.'
+    required: false
+    default: '.gateway-exempt'
+
+runs:
+  using: composite
+  steps:
+    - name: Scan for gateway bypass
+      shell: bash
+      env:
+        GATEWAY_HOSTNAME_PATTERN: ${{ inputs.gateway-hostname-pattern }}
+        EXEMPT_FILE_PATH: ${{ inputs.exempt-file-path }}
+      run: ${{ github.action_path }}/scan.sh

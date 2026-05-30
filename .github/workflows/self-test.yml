@@ -1,0 +1,20 @@
+name: Self Test
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run fixture tests
+        run: bash test/run-tests.sh
+
+  self-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Lint this repo (should pass — no Bicep / k8s manifests / .env.example here at root)
+        uses: ./

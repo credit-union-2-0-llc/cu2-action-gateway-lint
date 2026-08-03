@@ -38,10 +38,19 @@ if [ "$CANDIDATE_COUNT" -eq 0 ]; then
 fi
 
 OFFENDERS=()
+SCAN_ERRORS=()
 
 for f in "${FILES[@]}"; do
   # find lines referencing the key vars (definition lines, not random comments)
-  hits="$(grep -nE '(ANTHROPIC_API_KEY|OPENAI_API_KEY)' "$f" 2>/dev/null || true)"
+  # grep exit codes: 0=match, 1=no match, >=2=real error (unreadable file, etc).
+  # Collapsing 1 and >=2 into "no hits" would let an unreadable candidate file
+  # silently pass gateway-bypass review instead of being flagged as unscanned.
+  hits="$(grep -nE '(ANTHROPIC_API_KEY|OPENAI_API_KEY)' "$f" 2>&1)"
+  grep_rc=$?
+  if [ "$grep_rc" -ge 2 ]; then
+    SCAN_ERRORS+=("$f: $hits")
+    continue
+  fi
   [ -z "$hits" ] && continue
 
   # Look for a gateway base URL in the same file OR sibling bicep/manifest in same dir
@@ -68,6 +77,24 @@ for f in "${FILES[@]}"; do
     done <<< "$hits"
   fi
 done
+
+if [ "${#SCAN_ERRORS[@]}" -gt 0 ]; then
+  echo ""
+  echo "=========================================="
+  echo "  CU2 Gateway Bypass Lint — SCAN ERROR"
+  echo "=========================================="
+  echo ""
+  echo "${#SCAN_ERRORS[@]} candidate file(s) could not be read; gateway routing"
+  echo "cannot be certified from source for this run. Failing rather than"
+  echo "silently treating unreadable files as clean."
+  echo ""
+  for e in "${SCAN_ERRORS[@]}"; do
+    echo "  - $e"
+  done
+  echo ""
+  echo "Runbook: $RUNBOOK_URL"
+  exit 2
+fi
 
 if [ "${#OFFENDERS[@]}" -eq 0 ]; then
   echo "PASS: no gateway bypass detected."

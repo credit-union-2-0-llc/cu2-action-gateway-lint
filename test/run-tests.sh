@@ -60,4 +60,18 @@ EOF
 run_case "failing fixture WITH valid exemption" "$EXEMPT_DIR" 0
 rm -rf "$EXEMPT_DIR"
 
+# Unreadable-candidate-file test: a file grep cannot read must not be
+# silently treated the same as "no match found" (that would let an
+# unscanned candidate file slip through the gate as a false PASS).
+if [ "$(id -u)" -eq 0 ]; then
+  echo "SKIP: unreadable candidate file (running as root; chmod has no effect)"
+else
+  UNREADABLE_DIR="$(mktemp -d)"
+  cp "$ROOT/test/fixtures/passing/.env.example" "$UNREADABLE_DIR/"
+  chmod 000 "$UNREADABLE_DIR/.env.example"
+  run_case "unreadable candidate file" "$UNREADABLE_DIR" 2
+  chmod 644 "$UNREADABLE_DIR/.env.example"
+  rm -rf "$UNREADABLE_DIR"
+fi
+
 exit $FAIL

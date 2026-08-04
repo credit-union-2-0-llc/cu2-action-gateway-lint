@@ -53,15 +53,16 @@ The lint will then emit a `WARNING` instead of failing. Exemptions should be rev
 
 ## Result types
 
-The lint emits one of three result states. Consumers (CI dashboards, ops audits) should treat these distinctly:
+The lint emits one of four result states. Consumers (CI dashboards, ops audits) should treat these distinctly:
 
 | Result | Exit | Meaning |
 |--------|------|---------|
 | `PASS` | 0 | Candidate files were found and every `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` reference has a co-located `ANTHROPIC_BASE_URL` pointing at the gateway. Routing is verified in source. |
 | `PASS-EMPTY` | 0 | **Zero candidate files were scanned** (no Bicep, no K8s manifests, no `.env.example`, no `docker-compose*`). The lint cannot confirm routing from source — Anthropic config likely lives in deployed Container App env vars. **Verify deployed state separately** (e.g. `az containerapp show` against the gateway-bound CA). Do not treat `PASS-EMPTY` as equivalent to `PASS`. |
+| `SCAN ERROR` | 2 | At least one candidate file could not be read (permission denied, etc.). The lint refuses to certify `PASS` on an unscanned file — fix file permissions/availability and re-run. |
 | `FAIL` | 1 | At least one provider-key reference lacks a co-located gateway base URL, and no valid `.gateway-exempt` is present. |
 
-`PASS-EMPTY` was added in v1.0.1 to prevent false confidence for repos whose deploy config is generated/managed outside the source tree.
+`PASS-EMPTY` was added in v1.0.1 to prevent false confidence for repos whose deploy config is generated/managed outside the source tree. `SCAN ERROR` was added to prevent a candidate file that grep couldn't read from being silently counted as "no match" (a false `PASS`).
 
 ## Runbook
 

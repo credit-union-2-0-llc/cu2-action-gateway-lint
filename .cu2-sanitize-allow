@@ -1,0 +1,30 @@
+# .cu2-sanitize-allow — narrow, documented exceptions for cu2_sanitize_scan.py
+# See tools/sanitize/README.md in credit-union-2-0-llc/cu-agent-standards for
+# the tier model, the two profiles, and the rules of the road for this file.
+
+# ---------------------------------------------------------------------------
+# Public GitHub repo self-references. credit-union-2-0-llc/cu2-action-gateway-lint
+# is THIS repo (already public); credit-union-2-0-llc/cu-agent-standards is
+# also public and is the documented reusable-workflow consumption pattern.
+# ---------------------------------------------------------------------------
+line:github\.com/credit-union-2-0-llc/cu-agent-standards
+line:uses: credit-union-2-0-llc/cu-agent-standards/\.github/workflows/reusable-theater\.yml@main
+line:uses: credit-union-2-0-llc/cu-agent-standards/\.github/workflows/reusable-sanitize\.yml@main
+line:credit-union-2-0-llc/cu2-action-gateway-lint(?:@v1)?
+
+# ---------------------------------------------------------------------------
+# Runbook link into a different repo's wiki (ops-platform, private). This
+# names the repo and a doc title only -- no infra names, no credentials, and
+# a private repo's wiki requires the same access as the repo itself. Reviewed
+# 2026-08-04; accepted as low-risk, not fixed.
+# ---------------------------------------------------------------------------
+line:https://github\.com/credit-union-2-0-llc/ops-platform/wiki/litellm-gateway-runbook
+
+# ---------------------------------------------------------------------------
+# Passing-fixture .env.example uses a deliberately fake hostname
+# (ca-litellm-gateway.example.westus2.azurecontainerapps.io) -- the lint
+# tool's own check (scan.sh) only requires the base URL to contain
+# "litellm" or "gateway", never the real hostname, so this placeholder
+# exercises the same code path without disclosing the real one.
+# ---------------------------------------------------------------------------
+line:ANTHROPIC_BASE_URL=https://ca-litellm-gateway\.example\.westus2\.azurecontainerapps\.io
